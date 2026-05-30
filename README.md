@@ -163,8 +163,17 @@ Useful contributions:
 
 ---
 
+## Related
+
+**[GDPR Engineer Playbook →](https://github.com/arafatomer66/gdpr-engineer-playbook)**
+The 13 other GDPR articles engineers own — Art 5, 6, 9, 17, 20, 25, 28, 30, 33, 34, 35, 37, 83.
+Same format: legal text → code → audit evidence.
+
+---
+
 <div align="center">
 
-*Contributions welcome · Open a PR · No issues too small*
+*Part of a series on GDPR for engineers*
+[This Repo: Article 32 Spec](https://github.com/arafatomer66/gdpr-article-32-infra-spec) · [GDPR Engineer Playbook](https://github.com/arafatomer66/gdpr-engineer-playbook)
 
 </div>
