@@ -1,70 +1,77 @@
-# GDPR Article 32 — Infrastructure Specification
+<div align="center">
 
-> **For engineers, by engineers.** Article 32 is not a policy document. It is an infrastructure specification. Every clause maps to a concrete control. Every control requires verifiable evidence.
+# GDPR Article 32
+### Infrastructure Specification
 
----
+**For engineers, by engineers.**
+Article 32 is not a compliance document. It is an infrastructure specification.
+Every clause maps to a concrete control. Every control requires verifiable evidence.
 
-## What is Article 32?
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Controls](https://img.shields.io/badge/Controls-9-green.svg)](#controls)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/arafatomer66/gdpr-article-32-infra-spec/pulls)
 
-GDPR Article 32 mandates that data processors implement **"appropriate technical and organisational measures"** to secure personal data. The regulation does not prescribe exact tools — it defines outcomes. This repository translates those outcomes into engineering controls.
-
-**Legal text → Engineering requirement → Implementation → Audit evidence.**
-
----
-
-## The 9 Controls at a Glance
-
-| # | Control | Article Clause | Effort |
-|---|---------|---------------|--------|
-| [01](controls/01-pseudonymisation.md) | Pseudonymisation | 32(1)(a) | Medium |
-| [02](controls/02-encryption-at-rest.md) | Encryption at Rest (KMS) | 32(1)(a) | Low |
-| [03](controls/03-application-layer-encryption.md) | Application-Layer Encryption | 32(1)(a) | High |
-| [04](controls/04-session-management.md) | Automatic Session Logoff | 32(1)(b) | Low |
-| [05](controls/05-unique-identity.md) | Unique User Identification | 32(1)(b) | Medium |
-| [06](controls/06-multi-az-backup.md) | Multi-AZ Backup Infrastructure | 32(1)(c) | Medium |
-| [07](controls/07-disaster-recovery.md) | Tested Disaster Recovery | 32(1)(c) | Medium |
-| [08](controls/08-vulnerability-scanning.md) | Automated Vulnerability Scanning | 32(1)(d) | Low |
-| [09](controls/09-penetration-testing.md) | Annual Penetration Testing | 32(1)(d) | High |
+</div>
 
 ---
 
-## The Compliance Mindset Shift
+## The Core Idea
 
 ```
 POLICY:    "We encrypt personal data."
-EVIDENCE:  "Here is the KMS key ID, its rotation schedule,
-            and a CloudTrail entry showing last key use."
+
+EVIDENCE:  "Here is the KMS key ID, its 90-day rotation schedule,
+            a CloudTrail entry showing last key use, and the role
+            policy proving only the identity service can decrypt."
 ```
 
-Auditors do not read policy documents. They request:
-- Database schema dumps
-- CloudTrail log excerpts
-- CI/CD pipeline configs
-- DR test run logs
-- Pen test reports with remediation tickets
+Auditors do not read policy documents. They request database schema dumps, CloudTrail excerpts, CI/CD pipeline configs, DR test logs, and pen test reports with remediation tickets. This repository gives you all of it.
 
 ---
 
-## Quick Reference: Article 32 Text → Control Mapping
+## Article 32 → Control Mapping
 
 ```
 Article 32(1)(a)  pseudonymisation and encryption of personal data
-  → Control 01: Pseudonymisation
-  → Control 02: Encryption at Rest
-  → Control 03: Application-Layer Encryption
+  ├── Control 01  Pseudonymisation
+  ├── Control 02  Encryption at Rest (KMS)
+  └── Control 03  Application-Layer Encryption
 
 Article 32(1)(b)  ongoing confidentiality, integrity, availability and resilience
-  → Control 04: Automatic Session Logoff
-  → Control 05: Unique User Identification (IRSA)
+  ├── Control 04  Automatic Session Logoff
+  └── Control 05  Unique User Identification (IRSA)
 
 Article 32(1)(c)  ability to restore availability and access in a timely manner
-  → Control 06: Multi-AZ Backup Infrastructure
-  → Control 07: Tested Disaster Recovery
+  ├── Control 06  Multi-AZ Backup Infrastructure
+  └── Control 07  Tested Disaster Recovery
 
 Article 32(1)(d)  regular testing, assessing and evaluating effectiveness
-  → Control 08: Automated Vulnerability Scanning
-  → Control 09: Annual Penetration Testing
+  ├── Control 08  Automated Vulnerability Scanning
+  └── Control 09  Annual Penetration Testing
 ```
+
+---
+
+## Controls
+
+| # | Control | Clause | Effort | Time |
+|---|---------|--------|--------|------|
+| [01](controls/01-pseudonymisation.md) | Pseudonymisation | 32(1)(a) | Medium | 3–5 days |
+| [02](controls/02-encryption-at-rest.md) | Encryption at Rest (KMS) | 32(1)(a) | Low | 30 min – 1 day |
+| [03](controls/03-application-layer-encryption.md) | Application-Layer Encryption | 32(1)(a) | High | 3–5 days |
+| [04](controls/04-session-management.md) | Automatic Session Logoff | 32(1)(b) | Low | 1–2 days |
+| [05](controls/05-unique-identity.md) | Unique User Identification | 32(1)(b) | Medium | 2–4 days |
+| [06](controls/06-multi-az-backup.md) | Multi-AZ Backup Infrastructure | 32(1)(c) | Medium | 1–3 days |
+| [07](controls/07-disaster-recovery.md) | Tested Disaster Recovery | 32(1)(c) | Medium | 1 week |
+| [08](controls/08-vulnerability-scanning.md) | Automated Vulnerability Scanning | 32(1)(d) | Low | 1–2 days |
+| [09](controls/09-penetration-testing.md) | Annual Penetration Testing | 32(1)(d) | High | 4–8 weeks |
+
+Each control file contains:
+- The exact Article 32 clause it satisfies
+- Working implementation code (Python, TypeScript, SQL, Terraform, YAML)
+- Verification commands to confirm the control is active
+- An audit evidence table — what to produce when asked
+- Common mistakes that break the control silently
 
 ---
 
@@ -72,39 +79,64 @@ Article 32(1)(d)  regular testing, assessing and evaluating effectiveness
 
 | Auditor Question | What They Want to See |
 |-----------------|----------------------|
-| Can you re-identify pseudonymised data? | DB role grants — only authorized services can JOIN the identifier table |
-| Can your DBAs read customer data? | Direct query returning ciphertext + proof decryption keys are in Vault |
-| Who accessed this user's record? | CloudTrail logs with unique IAM role ARNs, no shared accounts |
-| What is your RTO? Show me proof. | Monthly DR test logs: snapshot ID, restore duration, verification queries |
-| When was your last pen test? | CREST/CHECK report < 12 months + remediation tickets for all CRITICAL/HIGH |
+| Can you re-identify pseudonymised data? | DB role grants — only the identity service can JOIN the identifier table |
+| Can your DBAs read customer data? | Direct query returning `vault:v1:...` ciphertext + Vault policy proof |
+| Who accessed this user's record? | CloudTrail logs with unique IAM role ARNs per service, no shared accounts |
+| What is your RTO? Show me proof. | Monthly DR test logs: snapshot ID, restore duration, row count verification |
+| When was your last pen test? | CREST report < 12 months + remediation tickets closed within SLA |
 
 ---
 
-## Implementation Timeline
+## Implementation Order
 
-| Phase | Controls | Duration |
-|-------|----------|----------|
-| Phase 1 | KMS key creation (02), Trivy in CI (08) | 1–2 days |
-| Phase 2 | Session timeouts (04), IRSA setup (05) | 3–5 days |
-| Phase 3 | Pseudonymisation schema (01), Multi-AZ RDS (06) | 1 week |
-| Phase 4 | App-layer encryption rollout (03), DR testing (07) | 1–2 weeks |
-| Phase 5 | Engage pen test firm (09) | Schedule 4–6 weeks out |
+Start here. Each phase builds on the previous.
 
-**Total: 2–4 weeks for full coverage (excluding pen test scheduling)**
+```
+Phase 1 — 1–2 days
+  ├── Control 02  KMS customer-managed key + automatic rotation
+  └── Control 08  Trivy in CI/CD pipeline blocking CRITICAL/HIGH
+
+Phase 2 — 3–5 days
+  ├── Control 04  15-min inactivity timeout, 8-hr absolute session limit
+  └── Control 05  IRSA — one IAM role per service, no shared credentials
+
+Phase 3 — 1 week
+  ├── Control 01  Pseudonymisation schema + role-based access
+  └── Control 06  Multi-AZ RDS + S3 cross-region replication
+
+Phase 4 — 1–2 weeks
+  ├── Control 03  Application-layer encryption via HashiCorp Vault transit
+  └── Control 07  First DR restore test + documented RTO/RPO
+
+Phase 5 — Schedule 4–6 weeks out
+  └── Control 09  CREST-certified penetration test engagement
+```
+
+**Full coverage: 2–4 weeks active work, pen test scheduled in parallel.**
 
 ---
 
-## Controls
+## Stack Coverage
 
-- [01 — Pseudonymisation](controls/01-pseudonymisation.md)
-- [02 — Encryption at Rest](controls/02-encryption-at-rest.md)
-- [03 — Application-Layer Encryption](controls/03-application-layer-encryption.md)
-- [04 — Session Management](controls/04-session-management.md)
-- [05 — Unique User Identification](controls/05-unique-identity.md)
-- [06 — Multi-AZ Backup](controls/06-multi-az-backup.md)
-- [07 — Disaster Recovery](controls/07-disaster-recovery.md)
-- [08 — Vulnerability Scanning](controls/08-vulnerability-scanning.md)
-- [09 — Penetration Testing](controls/09-penetration-testing.md)
+This specification uses the following stack. Controls are adaptable to other providers.
+
+| Layer | Technology |
+|-------|-----------|
+| Cloud | AWS (KMS, RDS, S3, IAM, CloudTrail, EKS) |
+| Infrastructure as Code | Terraform |
+| Secret Management | HashiCorp Vault |
+| Container Scanning | Trivy |
+| CI/CD | GitHub Actions |
+| Database | PostgreSQL |
+| Application | Python / TypeScript examples |
+
+---
+
+## What This Is Not
+
+- Not a legal opinion. Consult a GDPR-qualified lawyer for interpretations specific to your organisation.
+- Not exhaustive. Article 32 also requires organisational measures (training, access reviews, incident response). This repository covers the technical controls only.
+- Not AWS-only. The control objectives apply universally. The implementations use AWS as the concrete example.
 
 ---
 
@@ -113,9 +145,26 @@ Article 32(1)(d)  regular testing, assessing and evaluating effectiveness
 - [GDPR Article 32 — Official Text](https://gdpr-info.eu/art-32-gdpr/)
 - [EDPB Guidelines on Personal Data Breach Notification](https://edpb.europa.eu/our-work-tools/our-documents/guidelines/guidelines-92022-personal-data-breach-notification-under_en)
 - [AWS KMS Best Practices](https://docs.aws.amazon.com/kms/latest/developerguide/best-practices.html)
-- [CREST Pen Testing Standards](https://www.crest-approved.org/)
-- [NIST SP 800-53 — Mapping Reference](https://csrc.nist.gov/publications/detail/sp/800-53/rev-5/final)
+- [CREST Penetration Testing Standards](https://www.crest-approved.org/)
+- [NIST SP 800-53 Rev 5 — Control Mapping Reference](https://csrc.nist.gov/publications/detail/sp/800-53/rev-5/final)
+- [OWASP Testing Guide v4.2](https://owasp.org/www-project-web-security-testing-guide/)
 
 ---
 
-> Contributions welcome. Open a PR with corrections, additional controls, or real-world implementation examples.
+## Contributing
+
+Found an error, a better implementation, or a missing control? Open a PR.
+
+Useful contributions:
+- Corrections to CLI flags, API names, or Terraform resource schemas
+- Equivalent implementations for Azure, GCP, or non-AWS stacks
+- Real-world audit evidence examples (with sensitive data removed)
+- Additional controls not covered here (e.g., Article 32(2) risk assessment process)
+
+---
+
+<div align="center">
+
+*Contributions welcome · Open a PR · No issues too small*
+
+</div>
