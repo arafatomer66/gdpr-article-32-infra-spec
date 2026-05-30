@@ -124,17 +124,44 @@ resource "aws_s3_bucket_lifecycle_configuration" "personal_data" {
 
 ### Backup Monitoring: Alert on Missed Backups
 
+AWS does not publish a `BackupRetentionPeriod` CloudWatch metric. Use EventBridge to catch RDS backup failures instead:
+
 ```hcl
-resource "aws_cloudwatch_metric_alarm" "rds_backup_missed" {
-  alarm_name          = "rds-backup-missed"
-  comparison_operator = "LessThanThreshold"
+# Alert when an automated RDS snapshot fails
+resource "aws_cloudwatch_event_rule" "rds_backup_failed" {
+  name        = "rds-backup-failed"
+  description = "Fires when an automated RDS snapshot fails — GDPR Art 32"
+
+  event_pattern = jsonencode({
+    source      = ["aws.rds"]
+    detail-type = ["RDS DB Snapshot Event"]
+    detail = {
+      EventCategories = ["backup"]
+      Message         = [{ prefix = "Automated snapshot failed" }]
+    }
+  })
+}
+
+resource "aws_cloudwatch_event_target" "rds_backup_failed_sns" {
+  rule      = aws_cloudwatch_event_rule.rds_backup_failed.name
+  target_id = "notify-ops"
+  arn       = aws_sns_topic.ops_alerts.arn
+}
+```
+
+Also monitor the `SnapshotStorageUsed` metric to confirm snapshots are being created:
+
+```hcl
+resource "aws_cloudwatch_metric_alarm" "rds_no_snapshots" {
+  alarm_name          = "rds-no-snapshots"
+  comparison_operator = "LessThanOrEqualToThreshold"
   evaluation_periods  = 1
-  metric_name         = "BackupRetentionPeriod"
+  metric_name         = "SnapshotStorageUsed"
   namespace           = "AWS/RDS"
-  period              = 86400  # 24 hours
-  statistic           = "Minimum"
-  threshold           = 1
-  alarm_description   = "RDS automated backup not running — GDPR Art 32 compliance at risk"
+  period              = 86400
+  statistic           = "Maximum"
+  threshold           = 0
+  alarm_description   = "No RDS snapshot storage in use — backups may be disabled"
   alarm_actions       = [aws_sns_topic.ops_alerts.arn]
 
   dimensions = {

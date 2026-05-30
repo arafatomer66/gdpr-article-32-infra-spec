@@ -115,7 +115,13 @@ kind: Deployment
 metadata:
   name: identity-service
 spec:
+  selector:
+    matchLabels:
+      app: identity-service
   template:
+    metadata:
+      labels:
+        app: identity-service
     spec:
       serviceAccountName: identity-service  # binds the IRSA role
       containers:

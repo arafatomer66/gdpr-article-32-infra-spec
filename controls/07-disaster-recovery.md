@@ -93,6 +93,7 @@ EOF
 
 ```bash
 # Calculate RTO
+# Note: date -d is GNU date (Linux). On macOS use: date -j -f "%Y-%m-%dT%H:%M:%SZ"
 START_EPOCH=$(date -d "$RESTORE_START" +%s)
 END_EPOCH=$(date -d "$RESTORE_END" +%s)
 RTO_SECONDS=$(( END_EPOCH - START_EPOCH ))

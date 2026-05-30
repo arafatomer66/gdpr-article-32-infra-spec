@@ -130,14 +130,14 @@ def logout(user_id: str, raw_token: str, db):
     token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
     db.execute("""
         UPDATE refresh_tokens
-        SET revoked = true
+        SET revoked = true, revoked_at = now()
         WHERE token_hash = %s AND user_id = %s
     """, (token_hash, user_id))
 
 def revoke_all_sessions(user_id: str, db):
     """Use on password reset, account compromise, or GDPR erasure request."""
     db.execute("""
-        UPDATE refresh_tokens SET revoked = true WHERE user_id = %s
+        UPDATE refresh_tokens SET revoked = true, revoked_at = now() WHERE user_id = %s
     """, (user_id,))
 ```
 

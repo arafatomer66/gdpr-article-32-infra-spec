@@ -61,6 +61,11 @@ import base64
 import hvac
 from dataclasses import dataclass
 
+# JWT is injected by Kubernetes at /var/run/secrets/kubernetes.io/serviceaccount/token
+def get_k8s_jwt() -> str:
+    with open("/var/run/secrets/kubernetes.io/serviceaccount/token") as f:
+        return f.read()
+
 vault_client = hvac.Client(url="https://vault.internal")
 vault_client.auth.kubernetes.login(role="personal-data-app", jwt=get_k8s_jwt())
 
@@ -91,6 +96,10 @@ class PersonRecord:
     @property
     def national_id(self) -> str:
         return decrypt_field(self.national_id_enc)
+
+    @property
+    def health_notes(self) -> str:
+        return decrypt_field(self.health_notes_enc)
 
     @classmethod
     def create(cls, person_uuid: str, national_id: str, health_notes: str):
@@ -136,15 +145,19 @@ vault write transit/rewrap/personal-data ciphertext="vault:v1:..."
 ```python
 def rewrap_all_records(db):
     """Background job: upgrade all ciphertext to latest key version."""
-    records = db.query("SELECT person_uuid, national_id_enc FROM person_sensitive")
+    records = db.query("SELECT person_uuid, national_id_enc, health_notes_enc FROM person_sensitive")
     for record in records:
-        new_ciphertext = vault_client.secrets.transit.rewrap_data(
+        new_national_id = vault_client.secrets.transit.rewrap_data(
             name=KEY_NAME,
             ciphertext=record["national_id_enc"]
         )["data"]["ciphertext"]
+        new_health_notes = vault_client.secrets.transit.rewrap_data(
+            name=KEY_NAME,
+            ciphertext=record["health_notes_enc"]
+        )["data"]["ciphertext"]
         db.execute(
-            "UPDATE person_sensitive SET national_id_enc = %s WHERE person_uuid = %s",
-            (new_ciphertext, record["person_uuid"])
+            "UPDATE person_sensitive SET national_id_enc = %s, health_notes_enc = %s WHERE person_uuid = %s",
+            (new_national_id, new_health_notes, record["person_uuid"])
         )
 ```
 

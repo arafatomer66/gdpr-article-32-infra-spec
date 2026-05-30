@@ -36,7 +36,7 @@ Specify certification requirements in your pen test RFP. Auditors look for:
 |--------------|-------|-------------|
 | **CREST** | Infrastructure + web application | UK, EU, global |
 | **CHECK** | UK government systems | UK |
-| **OSCP / OSCE** | Individual tester qualification | Global |
+| **OSCP / OSCE3** | Individual tester qualification | Global |
 | **PTES / OWASP Testing Guide** | Methodology standard | Global |
 
 > For GDPR compliance, **CREST-certified firms are the standard auditors expect.** Individual OSCP certifications on the tester's CV are a secondary signal.
